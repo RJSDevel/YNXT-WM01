@@ -9,19 +9,7 @@
       <name>ALL</name>
       <member>
         <project>YnxtWaterMeter</project>
-        <configuration>CoordinatorEB</configuration>
-      </member>
-      <member>
-        <project>YnxtWaterMeter</project>
-        <configuration>RouterEB</configuration>
-      </member>
-      <member>
-        <project>YnxtWaterMeter</project>
         <configuration>EndDeviceEB</configuration>
-      </member>
-      <member>
-        <project>YnxtWaterMeter</project>
-        <configuration>RouterZLight</configuration>
       </member>
     </batchDefinition>
   </batchBuild>

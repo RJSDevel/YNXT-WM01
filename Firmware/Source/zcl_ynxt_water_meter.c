@@ -265,8 +265,6 @@ void zclYnxtWaterMeter_Init( byte task_id )
   //osal_pwrmgr_task_state(zclYnxtWaterMeter_TaskID, PWRMGR_HOLD);
   
   prepare_for_wait_start_measure();
-  
-  bdb_StartCommissioning(BDB_COMMISSIONING_MODE_NWK_STEERING | BDB_COMMISSIONING_MODE_FINDING_BINDING);
 }
 
 void zclYnxtWaterMeter_load_nvm() 
@@ -447,7 +445,7 @@ uint16 zclYnxtWaterMeter_event_loop( uint8 task_id, uint16 events )
         
         osal_nv_write(NV_ENABLED_FIRST_ID, 0, sizeof(zclYnxtWaterMeter_DeviceEnable_EP_First), &zclYnxtWaterMeter_DeviceEnable_EP_First);
         osal_nv_write(NV_ENABLED_SECOND_ID, 0, sizeof(zclYnxtWaterMeter_DeviceEnable_EP_Second), &zclYnxtWaterMeter_DeviceEnable_EP_Second);
-        osal_nv_write(NV_ENABLED_FIRST_ID, 0, sizeof(zclYnxtWaterMeter_DeviceEnable_EP_Third), &zclYnxtWaterMeter_DeviceEnable_EP_Third);
+        osal_nv_write(NV_ENABLED_THIRD_ID, 0, sizeof(zclYnxtWaterMeter_DeviceEnable_EP_Third), &zclYnxtWaterMeter_DeviceEnable_EP_Third);
         
         prepare_for_wait_start_measure();
       }
@@ -485,8 +483,6 @@ void prepare_for_wait_start_measure() {
 }
 
 void start_measuring() {
-  osal_pwrmgr_task_state(zclYnxtWaterMeter_TaskID, PWRMGR_HOLD);
-  
   bool firstEnabled = zclYnxtWaterMeter_DeviceEnable_EP_First == DEVICE_ENABLED;
   bool secondEnabled = zclYnxtWaterMeter_DeviceEnable_EP_Second == DEVICE_ENABLED;
   bool thirdEnabled = zclYnxtWaterMeter_DeviceEnable_EP_Third == DEVICE_ENABLED;
@@ -526,6 +522,7 @@ void start_measuring() {
     DMAIE = 1;
     T1CTL = MODE_FREE_RUNNING | DIV_128;
   
+    osal_pwrmgr_task_state(zclYnxtWaterMeter_TaskID, PWRMGR_HOLD);
     osal_start_reload_timer( zclYnxtWaterMeter_TaskID, YNXT_WATER_METER_MEASUREMENT, 1000);
   }
 }
