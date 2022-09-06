@@ -36,7 +36,7 @@
                 </option>
                 <option>
                     <name>MemOverride</name>
-                    <state>1</state>
+                    <state>0</state>
                 </option>
                 <option>
                     <name>OCProcessor</name>
@@ -384,7 +384,7 @@
                 <option>
                     <name>InfServerName2</name>
                     <version>0</version>
-                    <state>3</state>
+                    <state>0</state>
                 </option>
                 <option>
                     <name>InfineonHasCodeInXRAM</name>
@@ -581,7 +581,7 @@
                 </option>
                 <option>
                     <name>AD2EraseDataFlash</name>
-                    <state>1</state>
+                    <state>0</state>
                 </option>
                 <option>
                     <name>Debug Interface</name>
@@ -620,7 +620,7 @@
                 <option>
                     <name>Baud</name>
                     <version>0</version>
-                    <state>3</state>
+                    <state>4</state>
                 </option>
                 <option>
                     <name>CygnComm</name>
@@ -685,7 +685,7 @@
                 </option>
                 <option>
                     <name>SimPspConfigFile</name>
-                    <state>###Uninitialized###</state>
+                    <state>$TOOLKIT_DIR$\config\test.psp.config</state>
                 </option>
             </data>
         </settings>

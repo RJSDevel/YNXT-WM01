@@ -72,7 +72,7 @@ typedef struct {
 /* YNXT_WATER_METER_TODO: define app events here */
   
 #define YNXT_WATER_METER_MEASUREMENT              0x0004
-
+#define YNXT_UPDATE_ENABLED_ATTR                  0x0008
   
 #define YNXT_WATER_METER_END_DEVICE_REJOIN_DELAY 60000
 

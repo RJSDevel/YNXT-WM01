@@ -241,7 +241,7 @@ CONST zclAttrRec_t zclYnxtWaterMeter_Attrs_EP_First[] =
     { // Attribute record
       ATTRID_BASIC_DEVICE_ENABLED,
       ZCL_DATATYPE_BOOLEAN,
-      (ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE),
+      (ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE | ACCESS_CONTROL_AUTH_WRITE),
       (void *)&zclYnxtWaterMeter_DeviceEnable_EP_First
     }
   },
@@ -273,7 +273,7 @@ CONST zclAttrRec_t zclYnxtWaterMeter_Attrs_EP_Second[] =
     { // Attribute record
       ATTRID_BASIC_DEVICE_ENABLED,
       ZCL_DATATYPE_BOOLEAN,
-      (ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE),
+      (ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE | ACCESS_CONTROL_AUTH_WRITE),
       (void *)&zclYnxtWaterMeter_DeviceEnable_EP_Second
     }
   },
@@ -305,7 +305,7 @@ CONST zclAttrRec_t zclYnxtWaterMeter_Attrs_EP_Third[] =
     { // Attribute record
       ATTRID_BASIC_DEVICE_ENABLED,
       ZCL_DATATYPE_BOOLEAN,
-      (ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE),
+      (ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE | ACCESS_CONTROL_AUTH_WRITE),
       (void *)&zclYnxtWaterMeter_DeviceEnable_EP_Third
     }
   },
@@ -473,7 +473,17 @@ void zclYnxtWaterMeter_ResetAttributesToDefaultValues(void)
   zclYnxtWaterMeter_IdentifyTime = 0;
 #endif
   
-  /* YNXT_WATER_METER_TODO: initialize cluster attribute variables. */
+  zclYnxtWaterMeter_CurrentSummationDelivered_EP_First.lsb = 0;
+  zclYnxtWaterMeter_CurrentSummationDelivered_EP_Second.lsb = 0;
+  zclYnxtWaterMeter_CurrentSummationDelivered_EP_Third.lsb = 0;
+  
+  osal_nv_delete(NV_ENABLED_FIRST_ID, sizeof(zclYnxtWaterMeter_DeviceEnable_EP_First));
+  osal_nv_delete(NV_ENABLED_SECOND_ID, sizeof(zclYnxtWaterMeter_DeviceEnable_EP_Second));
+  osal_nv_delete(NV_ENABLED_THIRD_ID, sizeof(zclYnxtWaterMeter_DeviceEnable_EP_Third));
+  
+  osal_nv_delete(NV_CSD_FIRST_ID, sizeof(zclYnxtWaterMeter_CurrentSummationDelivered_EP_First));
+  osal_nv_delete(NV_CSD_SECOND_ID, sizeof(zclYnxtWaterMeter_CurrentSummationDelivered_EP_Second));
+  osal_nv_delete(NV_CSD_THIRD_ID, sizeof(zclYnxtWaterMeter_CurrentSummationDelivered_EP_Third));
 }
 
 /****************************************************************************

@@ -153,6 +153,8 @@ static void zclSampleApp_BatteryWarningCB( uint8 voltLevel);
 
 static void zclYnxtWaterMeter_ReportWaterFlow( uint8 endPoint, uint16* value );
 
+static ZStatus_t zclYnxtAuthorizeDirtyHackUpdateEnableStatesCB( afAddrType_t *srcAddr, zclAttrRec_t *pAttr, uint8 oper );
+
 void prepare_for_wait_start_measure(void);
 void start_measuring(void);
 
@@ -216,12 +218,15 @@ void zclYnxtWaterMeter_Init( byte task_id )
   
   bdb_RegisterSimpleDescriptor( &zclYnxtWaterMeter_SimpleDesc_EP_First );
   zcl_registerAttrList( WATER_METER_ENDPOINT_FIRST, zclYnxtWaterMeter_NumAttributes_EP_First, zclYnxtWaterMeter_Attrs_EP_First );
- 
+  zcl_registerReadWriteCB( WATER_METER_ENDPOINT_FIRST, NULL, zclYnxtAuthorizeDirtyHackUpdateEnableStatesCB);
+  
   bdb_RegisterSimpleDescriptor( &zclYnxtWaterMeter_SimpleDesc_EP_Second );
   zcl_registerAttrList( WATER_METER_ENDPOINT_SECOND, zclYnxtWaterMeter_NumAttributes_EP_Second, zclYnxtWaterMeter_Attrs_EP_Second );
+  zcl_registerReadWriteCB( WATER_METER_ENDPOINT_SECOND, NULL, zclYnxtAuthorizeDirtyHackUpdateEnableStatesCB);
   
   bdb_RegisterSimpleDescriptor( &zclYnxtWaterMeter_SimpleDesc_EP_Third );
   zcl_registerAttrList( WATER_METER_ENDPOINT_THIRD, zclYnxtWaterMeter_NumAttributes_EP_Third, zclYnxtWaterMeter_Attrs_EP_Third );
+  zcl_registerReadWriteCB( WATER_METER_ENDPOINT_THIRD, NULL, zclYnxtAuthorizeDirtyHackUpdateEnableStatesCB);
   
   bdb_RegisterSimpleDescriptor( &zclYnxtWaterMeter_SimpleDesc_EP_Fourth );
   zcl_registerAttrList( WATER_METER_ENDPOINT_FOURTH, zclYnxtWaterMeter_NumAttributes_EP_Fourth, zclYnxtWaterMeter_Attrs_EP_Fourth );
@@ -229,7 +234,7 @@ void zclYnxtWaterMeter_Init( byte task_id )
   // Register the Application to receive the unprocessed Foundation command/response messages
   zcl_registerForMsg( zclYnxtWaterMeter_TaskID );
   zcl_registerForMsgExt( zclYnxtWaterMeter_TaskID, AF_PREPROCESS );
-
+  
   //ZDO_RegisterForZDOMsg(zclYnxtWaterMeter_TaskID, Node_Desc_rsp);
   
   // Register low voltage NV memory protection application callback
@@ -265,8 +270,6 @@ void zclYnxtWaterMeter_Init( byte task_id )
   //osal_pwrmgr_task_state(zclYnxtWaterMeter_TaskID, PWRMGR_HOLD);
   
   prepare_for_wait_start_measure();
-  
-  bdb_StartCommissioning(BDB_COMMISSIONING_MODE_NWK_STEERING | BDB_COMMISSIONING_MODE_FINDING_BINDING);
 }
 
 void zclYnxtWaterMeter_load_nvm() 
@@ -294,6 +297,14 @@ void zclYnxtWaterMeter_load_nvm()
   if (osal_nv_item_init(NV_CSD_THIRD_ID, sizeof(zclYnxtWaterMeter_CurrentSummationDelivered_EP_Third), &zclYnxtWaterMeter_CurrentSummationDelivered_EP_Third) == SUCCESS) {
     osal_nv_read(NV_CSD_THIRD_ID, 0, sizeof(zclYnxtWaterMeter_CurrentSummationDelivered_EP_Third), &zclYnxtWaterMeter_CurrentSummationDelivered_EP_Third);
   }
+}
+
+ZStatus_t zclYnxtAuthorizeDirtyHackUpdateEnableStatesCB(afAddrType_t *srcAddr, zclAttrRec_t *pAttr, uint8 oper)
+{
+  if (pAttr->attr.attrId == ATTRID_BASIC_DEVICE_ENABLED && oper == ZCL_OPER_WRITE) {
+    osal_start_timerEx(zclYnxtWaterMeter_TaskID, YNXT_UPDATE_ENABLED_ATTR, 2000);
+  }
+  return ZSuccess;
 }
 
 /*********************************************************************
@@ -324,16 +335,16 @@ uint16 zclYnxtWaterMeter_event_loop( uint8 task_id, uint16 events )
         /*
       case ZDO_CB_MSG: 
         if (MSGpkt->clusterId == Node_Desc_rsp) {
-          ZDO_Config_Node_Descriptor.ManufacturerCode[0] = 0xCC;
-          ZDO_Config_Node_Descriptor.ManufacturerCode[1] = 0xCC;
-        }
+        ZDO_Config_Node_Descriptor.ManufacturerCode[0] = 0xCC;
+        ZDO_Config_Node_Descriptor.ManufacturerCode[1] = 0xCC;
+      }
         break;
-      */
+        */
       case ZDO_STATE_CHANGE:
         zclYnxtWaterMeter_NwkState = (devStates_t)(MSGpkt->hdr.status);
         
         switch(zclYnxtWaterMeter_NwkState) {
-        // now on the network
+          // now on the network
         case DEV_INIT:
         case DEV_END_DEVICE: 
           osal_pwrmgr_task_state(zclYnxtWaterMeter_TaskID, PWRMGR_HOLD);
@@ -385,6 +396,65 @@ uint16 zclYnxtWaterMeter_event_loop( uint8 task_id, uint16 events )
     return ( events ^ YNXT_WATER_METER_END_DEVICE_REJOIN_EVT );
   }
   
+  if (events &  YNXT_UPDATE_ENABLED_ATTR)
+  {
+    uint8 deviceEnable_EP_First;
+    osal_nv_read(NV_ENABLED_FIRST_ID, 0, sizeof(deviceEnable_EP_First), &deviceEnable_EP_First);
+    
+    if (zclYnxtWaterMeter_DeviceEnable_EP_First != deviceEnable_EP_First) {
+      if (zclYnxtWaterMeter_DeviceEnable_EP_First) {
+        CAPTURE0_SEL &= ~CAPTURE0_BV;
+        CAPTURE0_IEN |= CAPTURE0_BV;
+        T1CCTL0 &= CAPTURE_OFF;
+      } else {
+        CAPTURE0_SEL &= ~CAPTURE0_BV;
+        CAPTURE0_IEN |= CAPTURE0_BV;
+      }
+      
+      osal_nv_write(NV_ENABLED_FIRST_ID, 0, sizeof(zclYnxtWaterMeter_DeviceEnable_EP_First), &zclYnxtWaterMeter_DeviceEnable_EP_First);
+      
+      return ( events ^  YNXT_UPDATE_ENABLED_ATTR);
+    }
+    
+    uint8 deviceEnable_EP_Second;
+    osal_nv_read(NV_ENABLED_SECOND_ID, 0, sizeof(deviceEnable_EP_Second), &deviceEnable_EP_Second);
+    
+    if (zclYnxtWaterMeter_DeviceEnable_EP_Second != deviceEnable_EP_Second) 
+    {
+      if (zclYnxtWaterMeter_DeviceEnable_EP_Second) {
+        CAPTURE1_SEL &= ~CAPTURE1_BV;
+        CAPTURE1_IEN |= CAPTURE1_BV;
+        T1CCTL1 &= CAPTURE_OFF;
+      } else {
+        CAPTURE1_SEL &= ~CAPTURE1_BV;
+        CAPTURE1_IEN |= CAPTURE1_BV;
+      }
+      
+      osal_nv_write(NV_ENABLED_SECOND_ID, 0, sizeof(zclYnxtWaterMeter_DeviceEnable_EP_Second), &zclYnxtWaterMeter_DeviceEnable_EP_Second);
+      
+      return ( events ^  YNXT_UPDATE_ENABLED_ATTR);
+    }
+    
+    uint8 deviceEnable_EP_Third;
+    osal_nv_read(NV_ENABLED_THIRD_ID, 0, sizeof(deviceEnable_EP_Third), &deviceEnable_EP_Third);
+    
+    if (zclYnxtWaterMeter_DeviceEnable_EP_Third != deviceEnable_EP_Third) {
+      if (zclYnxtWaterMeter_DeviceEnable_EP_Third) {
+        CAPTURE2_SEL &= ~CAPTURE2_BV;
+        CAPTURE2_IEN |= CAPTURE2_BV;
+        T1CCTL2 &= CAPTURE_OFF;
+      } else {
+        CAPTURE2_SEL &= ~CAPTURE2_BV;
+        CAPTURE2_IEN &= ~CAPTURE2_BV;
+      }
+      
+      osal_nv_write(NV_ENABLED_THIRD_ID, 0, sizeof(zclYnxtWaterMeter_DeviceEnable_EP_Third), &zclYnxtWaterMeter_DeviceEnable_EP_Third);
+    }
+    
+    
+    return ( events ^  YNXT_UPDATE_ENABLED_ATTR);
+  }
+  
   if ( events & YNXT_WATER_METER_MEASUREMENT )
   { 
     bool firstEnabled = zclYnxtWaterMeter_DeviceEnable_EP_First == DEVICE_ENABLED;
@@ -410,13 +480,13 @@ uint16 zclYnxtWaterMeter_event_loop( uint8 task_id, uint16 events )
     }
     
     last_capture_ch1 = 0;
-
+    
     if (thirdEnabled) {
       float flow2 = last_capture_ch2 / 38.0;
       flow2_report = (uint16) (flow2 * 10);
       zclYnxtWaterMeter_CurrentSummationDelivered_EP_Third.lsb += (flow2 / 60.0) * 100;
     }
-
+    
     last_capture_ch2 = 0;
     
     if (zclYnxtWaterMeter_FlowMeasuredValue_EP_First != flow0_report) {
@@ -445,10 +515,6 @@ uint16 zclYnxtWaterMeter_event_loop( uint8 task_id, uint16 events )
         osal_nv_write(NV_CSD_SECOND_ID, 0, sizeof(zclYnxtWaterMeter_CurrentSummationDelivered_EP_Second), &zclYnxtWaterMeter_CurrentSummationDelivered_EP_Second);
         osal_nv_write(NV_CSD_THIRD_ID, 0, sizeof(zclYnxtWaterMeter_CurrentSummationDelivered_EP_Third), &zclYnxtWaterMeter_CurrentSummationDelivered_EP_Third);
         
-        osal_nv_write(NV_ENABLED_FIRST_ID, 0, sizeof(zclYnxtWaterMeter_DeviceEnable_EP_First), &zclYnxtWaterMeter_DeviceEnable_EP_First);
-        osal_nv_write(NV_ENABLED_SECOND_ID, 0, sizeof(zclYnxtWaterMeter_DeviceEnable_EP_Second), &zclYnxtWaterMeter_DeviceEnable_EP_Second);
-        osal_nv_write(NV_ENABLED_FIRST_ID, 0, sizeof(zclYnxtWaterMeter_DeviceEnable_EP_Third), &zclYnxtWaterMeter_DeviceEnable_EP_Third);
-        
         prepare_for_wait_start_measure();
       }
     }
@@ -476,7 +542,17 @@ void prepare_for_wait_start_measure() {
   P1IF = 0;
   
   CAPTURE0_SEL &= ~CAPTURE0_BV;
-  CAPTURE0_IEN |= CAPTURE0_BV;
+  CAPTURE1_SEL &= ~CAPTURE1_BV;
+  CAPTURE2_SEL &= ~CAPTURE2_BV;
+  
+  if (zclYnxtWaterMeter_DeviceEnable_EP_First) CAPTURE0_IEN |= CAPTURE0_BV;
+  else CAPTURE0_IEN &= ~CAPTURE0_BV;
+  
+  if (zclYnxtWaterMeter_DeviceEnable_EP_Second) CAPTURE1_IEN |= CAPTURE2_BV;
+  else CAPTURE1_IEN &= ~CAPTURE1_BV;
+  
+  if (zclYnxtWaterMeter_DeviceEnable_EP_Third) CAPTURE2_IEN |= CAPTURE2_BV;
+  else CAPTURE2_IEN &= ~CAPTURE2_BV;
   
   P0IE = 1;
   IEN2 |= BV(4); // P1IE
@@ -485,13 +561,8 @@ void prepare_for_wait_start_measure() {
 }
 
 void start_measuring() {
-  osal_pwrmgr_task_state(zclYnxtWaterMeter_TaskID, PWRMGR_HOLD);
   
-  bool firstEnabled = zclYnxtWaterMeter_DeviceEnable_EP_First == DEVICE_ENABLED;
-  bool secondEnabled = zclYnxtWaterMeter_DeviceEnable_EP_Second == DEVICE_ENABLED;
-  bool thirdEnabled = zclYnxtWaterMeter_DeviceEnable_EP_Third == DEVICE_ENABLED;
-  
-  if (firstEnabled && (CAPTURE0_IFG & CAPTURE0_BV)) {
+  if (CAPTURE0_IFG & CAPTURE0_BV) {
     last_capture_ch0++;
     
     CAPTURE0_IEN &= ~CAPTURE0_BV;
@@ -501,7 +572,7 @@ void start_measuring() {
     T1CCTL0 |= CAPTURE_FALLING_EDGE;
   }
   
-  if (secondEnabled && (CAPTURE1_IFG & CAPTURE1_BV)) {
+  if (CAPTURE1_IFG & CAPTURE1_BV) {
     last_capture_ch1++;
     
     CAPTURE1_IEN &= ~CAPTURE1_BV;
@@ -511,7 +582,7 @@ void start_measuring() {
     T1CCTL1 |= CAPTURE_FALLING_EDGE;
   }
   
-  if (thirdEnabled && (CAPTURE2_IFG & CAPTURE2_BV)) {
+  if (CAPTURE2_IFG & CAPTURE2_BV) {
     last_capture_ch2++;
     
     CAPTURE2_IEN &= ~CAPTURE2_BV;
@@ -521,13 +592,12 @@ void start_measuring() {
     T1CCTL2 |= CAPTURE_FALLING_EDGE;
   }
   
-  if (firstEnabled || secondEnabled || thirdEnabled) {
-    T1IE = 1;
-    DMAIE = 1;
-    T1CTL = MODE_FREE_RUNNING | DIV_128;
+  T1IE = 1;
+  DMAIE = 1;
+  T1CTL = MODE_FREE_RUNNING | DIV_128;
   
-    osal_start_reload_timer( zclYnxtWaterMeter_TaskID, YNXT_WATER_METER_MEASUREMENT, 1000);
-  }
+  osal_pwrmgr_task_state(zclYnxtWaterMeter_TaskID, PWRMGR_HOLD);
+  osal_start_reload_timer( zclYnxtWaterMeter_TaskID, YNXT_WATER_METER_MEASUREMENT, 1000);
 }
 
 HAL_ISR_FUNCTION( captureIsr, T1_VECTOR )
@@ -714,11 +784,11 @@ static void zclYnxtWaterMeter_BindNotification( bdbBindNotificationData_t *data 
 */
 static void zclYnxtWaterMeter_BasicResetCB( void )
 {
-  
-  /* YNXT_WATER_METER_TODO: remember to update this function with any
-  application-specific cluster attribute variables */
-  
   zclYnxtWaterMeter_ResetAttributesToDefaultValues();
+  
+  bdb_RepChangedAttrValue(WATER_METER_ENDPOINT_FIRST, ZCL_CLUSTER_ID_SE_METERING, ATTRID_SE_METERING_CURR_SUMM_DLVD);
+  bdb_RepChangedAttrValue(WATER_METER_ENDPOINT_SECOND, ZCL_CLUSTER_ID_SE_METERING, ATTRID_SE_METERING_CURR_SUMM_DLVD);
+  bdb_RepChangedAttrValue(WATER_METER_ENDPOINT_THIRD, ZCL_CLUSTER_ID_SE_METERING, ATTRID_SE_METERING_CURR_SUMM_DLVD);
 }
 /*********************************************************************
 * @fn      zclSampleApp_BatteryWarningCB
