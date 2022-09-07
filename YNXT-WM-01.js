@@ -23,12 +23,13 @@ const fromZigbee_Metering = {
             //const factor = multiplier && divisor ? multiplier / divisor : null;
 
             if (msg.data.hasOwnProperty('currentSummDelivered')) {
-                let volume = 0;
                 const data = msg.data['currentSummDelivered'];
                 const value = (parseInt(data[0]) << 32) + parseInt(data[1]);
-                volume += value * 0.01; //* factor;
+                let volume = value * 0.001; //* factor;
 				payload[postfixWithEndpointName('volume', msg, model, meta)] = precisionRound(volume, 2);
-            }
+            } else {
+				payload[postfixWithEndpointName('volume', msg, model, meta)] = 0;
+			}
 
             return payload;
         }
@@ -51,6 +52,8 @@ const fromZigbee_msFlowMeasurement = {
 			const result = {};
 			if(msg.data.hasOwnProperty('measuredValue')) {
 				result[postfixWithEndpointName('flow', msg, model, meta)] = msg.data['measuredValue'] / 10;
+			} else {
+				result[postfixWithEndpointName('flow', msg, model, meta)] = 0;
 			}
 			return result;
 		}

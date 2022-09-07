@@ -466,25 +466,25 @@ uint16 zclYnxtWaterMeter_event_loop( uint8 task_id, uint16 events )
     uint16 flow2_report = 0;
     
     if (firstEnabled) {
-      float flow0 = last_capture_ch0 / 38.0;
-      flow0_report = (uint16) (flow0 * 10);
-      zclYnxtWaterMeter_CurrentSummationDelivered_EP_First.lsb += (flow0 / 60.0) * 100;
+      float flow_per_sec = last_capture_ch0 * COUNTER_PULSE_WEIGHT_PER_SEC;
+      flow0_report = (uint16) (flow_per_sec * 10);
+      zclYnxtWaterMeter_CurrentSummationDelivered_EP_First.lsb += (flow_per_sec / 60.0) * 1000; // Why 1000? Because if flow is less than 0.4, result can't reach integer part
     }
     
     last_capture_ch0 = 0;
     
     if (secondEnabled) {
-      float flow1 = last_capture_ch1 / 38.0;
-      flow1_report = (uint16) (flow1 * 10);
-      zclYnxtWaterMeter_CurrentSummationDelivered_EP_Second.lsb += (flow1 / 60.0) * 100;
+      float flow_per_sec = last_capture_ch1 * COUNTER_PULSE_WEIGHT_PER_SEC;
+      flow1_report = (uint16) (flow_per_sec * 10);
+      zclYnxtWaterMeter_CurrentSummationDelivered_EP_Second.lsb += (flow_per_sec / 60.0) * 1000;
     }
     
     last_capture_ch1 = 0;
     
     if (thirdEnabled) {
-      float flow2 = last_capture_ch2 / 38.0;
-      flow2_report = (uint16) (flow2 * 10);
-      zclYnxtWaterMeter_CurrentSummationDelivered_EP_Third.lsb += (flow2 / 60.0) * 100;
+      float flow_per_sec = last_capture_ch2 * COUNTER_PULSE_WEIGHT_PER_SEC;
+      flow2_report = (uint16) (flow_per_sec * 10);
+      zclYnxtWaterMeter_CurrentSummationDelivered_EP_Third.lsb += (flow_per_sec / 60.0) * 1000;
     }
     
     last_capture_ch2 = 0;
