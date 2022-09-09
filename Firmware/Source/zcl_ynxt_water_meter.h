@@ -106,8 +106,19 @@ extern SimpleDescriptionFormat_t zclYnxtWaterMeter_SimpleDesc_EP_Second;
 extern SimpleDescriptionFormat_t zclYnxtWaterMeter_SimpleDesc_EP_Third;
 extern SimpleDescriptionFormat_t zclYnxtWaterMeter_SimpleDesc_EP_Fourth;
 
+
+extern CONST zclCommandRec_t zclYnxtWaterMeterCmds_EP_First[];
+extern CONST uint8 zclCmdsArraySize_EP_First;
+
+extern CONST zclCommandRec_t zclYnxtWaterMeterCmds_EP_Second[];
+extern CONST uint8 zclCmdsArraySize_EP_Second;
+
+extern CONST zclCommandRec_t zclYnxtWaterMeterCmds_EP_Third[];
+extern CONST uint8 zclCmdsArraySize_EP_Third;
+
 extern CONST zclCommandRec_t zclYnxtWaterMeterCmds_EP_Fourth[];
 extern CONST uint8 zclCmdsArraySize_EP_Fourth;
+
 
 // attribute list
 extern CONST zclAttrRec_t zclYnxtWaterMeter_Attrs_EP_First[];
@@ -159,6 +170,9 @@ extern UINT16 zclYnxtWaterMeter_event_loop( byte task_id, UINT16 events );
 /*
  *  Reset all writable attributes to their default values.
  */
+extern void zclYnxtWaterMeter_ResetAttributesToDefaultValues_EP_First(void);
+extern void zclYnxtWaterMeter_ResetAttributesToDefaultValues_EP_Second(void);
+extern void zclYnxtWaterMeter_ResetAttributesToDefaultValues_EP_Third(void);
 extern void zclYnxtWaterMeter_ResetAttributesToDefaultValues(void);
 
 /*********************************************************************

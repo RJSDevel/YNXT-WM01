@@ -149,16 +149,19 @@ const definition = {
 		exposes.enum('enabled', ea.SET, ['Enabled', 'Disabled']).withDescription('Device enabled').withEndpoint('l1'),
 		exposes.numeric('flow', ea.STATE).withUnit('L/min').withDescription('Flow').withEndpoint('l1'),
 		exposes.numeric('volume', ea.STATE_GET).withUnit('Liters').withDescription('Volume').withEndpoint('l1'),
+		exposes.enum('reset', ea.SET, ['Reset']).withDescription('Reset volume after change filter').withEndpoint('l1'),
 		
 		exposes.enum('enabled', ea.SET, ['Enabled', 'Disabled']).withDescription('Device enabled').withEndpoint('l2'),
 		exposes.numeric('flow', ea.STATE).withUnit('L/min').withDescription('Flow').withEndpoint('l2'),
 		exposes.numeric('volume', ea.STATE_GET).withUnit('Liters').withDescription('Volume').withEndpoint('l2'),
+		exposes.enum('reset', ea.SET, ['Reset']).withDescription('Reset volume after change filter').withEndpoint('l2'),
 		
 		exposes.enum('enabled', ea.SET, ['Enabled', 'Disabled']).withDescription('Device enabled').withEndpoint('l3'),
 		exposes.numeric('flow', ea.STATE).withUnit('L/min').withDescription('Flow').withEndpoint('l3'),
 		exposes.numeric('volume', ea.STATE_GET).withUnit('Liters').withDescription('Volume').withEndpoint('l3'),
+		exposes.enum('reset', ea.SET, ['Reset']).withDescription('Reset volume after change filter').withEndpoint('l3'),
 		
-		exposes.enum('reset', ea.SET, ['Reset']).withDescription('Reset device').withEndpoint('l4'),
+		exposes.enum('reset', ea.SET, ['Reset']).withDescription('Reset whole device collected volume').withEndpoint('l4'),
 		e.switch().withDescription('External load').withEndpoint('l4')
 	]
 };

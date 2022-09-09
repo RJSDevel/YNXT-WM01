@@ -123,6 +123,9 @@ static void zclYnxtWaterMeter_load_nvm(void);
 
 static void zclYnxtWaterMeter_HandleKeys(byte keys);
 
+static void zclYnxtWaterMeter_BasicResetCB_EP_First( void );
+static void zclYnxtWaterMeter_BasicResetCB_EP_Second( void );
+static void zclYnxtWaterMeter_BasicResetCB_EP_Third( void );
 static void zclYnxtWaterMeter_BasicResetCB( void );
 
 static void zclYnxtWaterMeter_OnOffCB( uint8 cmd );
@@ -163,6 +166,39 @@ void halProcessKeyInterrupt(void);
 /*********************************************************************
 * ZCL General Profile Callback table
 */
+static zclGeneral_AppCallbacks_t zclYnxtWaterMeter_CmdCallbacks_EP_First =
+{
+  zclYnxtWaterMeter_BasicResetCB_EP_First,      // Basic Cluster Reset command
+  NULL,                                         // Identify Trigger Effect command
+  NULL,                                         // On/Off cluster commands
+  NULL,                                         // On/Off cluster enhanced command Off with Effect
+  NULL,                                         // On/Off cluster enhanced command On with Recall Global Scene
+  NULL,                                         // On/Off cluster enhanced command On with Timed Off
+  NULL,                                         // RSSI Location command
+  NULL                                          // RSSI Location Response command
+};
+static zclGeneral_AppCallbacks_t zclYnxtWaterMeter_CmdCallbacks_EP_Second =
+{
+  zclYnxtWaterMeter_BasicResetCB_EP_Second,     // Basic Cluster Reset command
+  NULL,                                         // Identify Trigger Effect command
+  NULL,                                         // On/Off cluster commands
+  NULL,                                         // On/Off cluster enhanced command Off with Effect
+  NULL,                                         // On/Off cluster enhanced command On with Recall Global Scene
+  NULL,                                         // On/Off cluster enhanced command On with Timed Off
+  NULL,                                         // RSSI Location command
+  NULL                                          // RSSI Location Response command
+};
+static zclGeneral_AppCallbacks_t zclYnxtWaterMeter_CmdCallbacks_EP_Third =
+{
+  zclYnxtWaterMeter_BasicResetCB_EP_Third,      // Basic Cluster Reset command
+  NULL,                                         // Identify Trigger Effect command
+  NULL,                                         // On/Off cluster commands
+  NULL,                                         // On/Off cluster enhanced command Off with Effect
+  NULL,                                         // On/Off cluster enhanced command On with Recall Global Scene
+  NULL,                                         // On/Off cluster enhanced command On with Timed Off
+  NULL,                                         // RSSI Location command
+  NULL                                          // RSSI Location Response command
+};
 static zclGeneral_AppCallbacks_t zclYnxtWaterMeter_CmdCallbacks =
 {
   zclYnxtWaterMeter_BasicResetCB,         // Basic Cluster Reset command
@@ -212,6 +248,15 @@ void zclYnxtWaterMeter_Init( byte task_id )
   zclYnxtWaterMeter_load_nvm();
   
 #ifdef ZCL_DISCOVER
+  zclGeneral_RegisterCmdCallbacks( WATER_METER_ENDPOINT_FIRST, &zclYnxtWaterMeter_CmdCallbacks_EP_First);
+  zcl_registerCmdList( WATER_METER_ENDPOINT_FIRST, zclCmdsArraySize_EP_First, zclYnxtWaterMeterCmds_EP_First);
+  
+  zclGeneral_RegisterCmdCallbacks( WATER_METER_ENDPOINT_SECOND, &zclYnxtWaterMeter_CmdCallbacks_EP_Second);
+  zcl_registerCmdList( WATER_METER_ENDPOINT_SECOND, zclCmdsArraySize_EP_Second, zclYnxtWaterMeterCmds_EP_Second);
+  
+  zclGeneral_RegisterCmdCallbacks( WATER_METER_ENDPOINT_THIRD, &zclYnxtWaterMeter_CmdCallbacks_EP_Third);
+  zcl_registerCmdList( WATER_METER_ENDPOINT_THIRD, zclCmdsArraySize_EP_Third, zclYnxtWaterMeterCmds_EP_Third);
+  
   zclGeneral_RegisterCmdCallbacks( WATER_METER_ENDPOINT_FOURTH, &zclYnxtWaterMeter_CmdCallbacks);
   zcl_registerCmdList( WATER_METER_ENDPOINT_FOURTH, zclCmdsArraySize_EP_Fourth, zclYnxtWaterMeterCmds_EP_Fourth);
 #endif
@@ -507,6 +552,7 @@ uint16 zclYnxtWaterMeter_event_loop( uint8 task_id, uint16 events )
     if (flow0_report == 0 && flow1_report == 0 && flow2_report == 0) {
       if (zero_flow_count++ == ZERO_FLOW_SECONDS_SLEEP_TRIGGER) {
         zero_flow_count = 0;
+        
         bdb_RepChangedAttrValue(WATER_METER_ENDPOINT_FIRST, ZCL_CLUSTER_ID_SE_METERING, ATTRID_SE_METERING_CURR_SUMM_DLVD);
         bdb_RepChangedAttrValue(WATER_METER_ENDPOINT_SECOND, ZCL_CLUSTER_ID_SE_METERING, ATTRID_SE_METERING_CURR_SUMM_DLVD);
         bdb_RepChangedAttrValue(WATER_METER_ENDPOINT_THIRD, ZCL_CLUSTER_ID_SE_METERING, ATTRID_SE_METERING_CURR_SUMM_DLVD);
@@ -782,8 +828,26 @@ static void zclYnxtWaterMeter_BindNotification( bdbBindNotificationData_t *data 
 *
 * @return  none
 */
+static void zclYnxtWaterMeter_BasicResetCB_EP_First( void ) {
+  zclYnxtWaterMeter_ResetAttributesToDefaultValues_EP_First();
+  bdb_RepChangedAttrValue(WATER_METER_ENDPOINT_FIRST, ZCL_CLUSTER_ID_SE_METERING, ATTRID_SE_METERING_CURR_SUMM_DLVD);
+}
+
+static void zclYnxtWaterMeter_BasicResetCB_EP_Second( void ) {
+  zclYnxtWaterMeter_ResetAttributesToDefaultValues_EP_Second();
+  bdb_RepChangedAttrValue(WATER_METER_ENDPOINT_SECOND, ZCL_CLUSTER_ID_SE_METERING, ATTRID_SE_METERING_CURR_SUMM_DLVD);
+}
+
+static void zclYnxtWaterMeter_BasicResetCB_EP_Third( void ) {
+  zclYnxtWaterMeter_ResetAttributesToDefaultValues_EP_Third();
+  bdb_RepChangedAttrValue(WATER_METER_ENDPOINT_THIRD, ZCL_CLUSTER_ID_SE_METERING, ATTRID_SE_METERING_CURR_SUMM_DLVD);
+}
+
 static void zclYnxtWaterMeter_BasicResetCB( void )
 {
+  zclYnxtWaterMeter_BasicResetCB_EP_First();
+  zclYnxtWaterMeter_BasicResetCB_EP_Second();
+  zclYnxtWaterMeter_BasicResetCB_EP_Third();
   zclYnxtWaterMeter_ResetAttributesToDefaultValues();
   
   bdb_RepChangedAttrValue(WATER_METER_ENDPOINT_FIRST, ZCL_CLUSTER_ID_SE_METERING, ATTRID_SE_METERING_CURR_SUMM_DLVD);
