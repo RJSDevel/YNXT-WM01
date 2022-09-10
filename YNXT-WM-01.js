@@ -23,12 +23,13 @@ const fromZigbee_Metering = {
             //const factor = multiplier && divisor ? multiplier / divisor : null;
 
             if (msg.data.hasOwnProperty('currentSummDelivered')) {
-                let volume = 0;
                 const data = msg.data['currentSummDelivered'];
                 const value = (parseInt(data[0]) << 32) + parseInt(data[1]);
-                volume += value * 0.01; //* factor;
+                let volume = value * 0.001; //* factor;
 				payload[postfixWithEndpointName('volume', msg, model, meta)] = precisionRound(volume, 2);
-            }
+            } else {
+				payload[postfixWithEndpointName('volume', msg, model, meta)] = 0;
+			}
 
             return payload;
         }
@@ -51,6 +52,8 @@ const fromZigbee_msFlowMeasurement = {
 			const result = {};
 			if(msg.data.hasOwnProperty('measuredValue')) {
 				result[postfixWithEndpointName('flow', msg, model, meta)] = msg.data['measuredValue'] / 10;
+			} else {
+				result[postfixWithEndpointName('flow', msg, model, meta)] = 0;
 			}
 			return result;
 		}
@@ -146,16 +149,19 @@ const definition = {
 		exposes.enum('enabled', ea.SET, ['Enabled', 'Disabled']).withDescription('Device enabled').withEndpoint('l1'),
 		exposes.numeric('flow', ea.STATE).withUnit('L/min').withDescription('Flow').withEndpoint('l1'),
 		exposes.numeric('volume', ea.STATE_GET).withUnit('Liters').withDescription('Volume').withEndpoint('l1'),
+		exposes.enum('reset', ea.SET, ['Reset']).withDescription('Reset volume after change filter').withEndpoint('l1'),
 		
 		exposes.enum('enabled', ea.SET, ['Enabled', 'Disabled']).withDescription('Device enabled').withEndpoint('l2'),
 		exposes.numeric('flow', ea.STATE).withUnit('L/min').withDescription('Flow').withEndpoint('l2'),
 		exposes.numeric('volume', ea.STATE_GET).withUnit('Liters').withDescription('Volume').withEndpoint('l2'),
+		exposes.enum('reset', ea.SET, ['Reset']).withDescription('Reset volume after change filter').withEndpoint('l2'),
 		
 		exposes.enum('enabled', ea.SET, ['Enabled', 'Disabled']).withDescription('Device enabled').withEndpoint('l3'),
 		exposes.numeric('flow', ea.STATE).withUnit('L/min').withDescription('Flow').withEndpoint('l3'),
 		exposes.numeric('volume', ea.STATE_GET).withUnit('Liters').withDescription('Volume').withEndpoint('l3'),
+		exposes.enum('reset', ea.SET, ['Reset']).withDescription('Reset volume after change filter').withEndpoint('l3'),
 		
-		exposes.enum('reset', ea.SET, ['Reset']).withDescription('Reset device').withEndpoint('l4'),
+		exposes.enum('reset', ea.SET, ['Reset']).withDescription('Reset whole device collected volume').withEndpoint('l4'),
 		e.switch().withDescription('External load').withEndpoint('l4')
 	]
 };

@@ -161,6 +161,8 @@
 #define CAPTURE1_POLARITY       ACTIVE_HIGH
 #define CAPTURE2_POLARITY       ACTIVE_HIGH
 
+#define COUNTER_PULSE_WEIGHT_PER_SEC 0.03125 // ~1/32 L/imp
+
 /* ------------------------------------------------------------------------------------------------
  *                         OSAL NV implemented by internal flash pages.
  * ------------------------------------------------------------------------------------------------

@@ -123,6 +123,33 @@ uint16 zclYnxtWaterMeter_IdentifyTime = 0;
 */
 
 #if ZCL_DISCOVER
+CONST zclCommandRec_t zclYnxtWaterMeterCmds_EP_First[] =
+{
+  {
+    ZCL_CLUSTER_ID_GEN_BASIC,
+    COMMAND_BASIC_RESET_FACT_DEFAULT,
+    CMD_DIR_SERVER_RECEIVED
+  }
+};
+
+CONST zclCommandRec_t zclYnxtWaterMeterCmds_EP_Second[] =
+{
+  {
+    ZCL_CLUSTER_ID_GEN_BASIC,
+    COMMAND_BASIC_RESET_FACT_DEFAULT,
+    CMD_DIR_SERVER_RECEIVED
+  }
+};
+
+CONST zclCommandRec_t zclYnxtWaterMeterCmds_EP_Third[] =
+{
+  {
+    ZCL_CLUSTER_ID_GEN_BASIC,
+    COMMAND_BASIC_RESET_FACT_DEFAULT,
+    CMD_DIR_SERVER_RECEIVED
+  }
+};
+
 CONST zclCommandRec_t zclYnxtWaterMeterCmds_EP_Fourth[] =
 {
   {
@@ -141,6 +168,10 @@ CONST zclCommandRec_t zclYnxtWaterMeterCmds_EP_Fourth[] =
     CMD_DIR_SERVER_RECEIVED
   },
 };
+
+CONST uint8 zclCmdsArraySize_EP_First = ( sizeof(zclYnxtWaterMeterCmds_EP_First) / sizeof(zclYnxtWaterMeterCmds_EP_First[0]) );
+CONST uint8 zclCmdsArraySize_EP_Second = ( sizeof(zclYnxtWaterMeterCmds_EP_Second) / sizeof(zclYnxtWaterMeterCmds_EP_Second[0]) );
+CONST uint8 zclCmdsArraySize_EP_Third = ( sizeof(zclYnxtWaterMeterCmds_EP_Third) / sizeof(zclYnxtWaterMeterCmds_EP_Third[0]) );
 
 CONST uint8 zclCmdsArraySize_EP_Fourth = ( sizeof(zclYnxtWaterMeterCmds_EP_Fourth) / sizeof(zclYnxtWaterMeterCmds_EP_Fourth[0]) );
 #endif // ZCL_DISCOVER
@@ -467,23 +498,30 @@ SimpleDescriptionFormat_t zclYnxtWaterMeter_SimpleDesc_EP_Fourth =
 * LOCAL FUNCTIONS
 */
 
+extern void zclYnxtWaterMeter_ResetAttributesToDefaultValues_EP_First(void)
+{
+  zclYnxtWaterMeter_CurrentSummationDelivered_EP_First.lsb = 0;
+  osal_nv_delete(NV_ENABLED_FIRST_ID, sizeof(zclYnxtWaterMeter_DeviceEnable_EP_First));
+  osal_nv_delete(NV_CSD_FIRST_ID, sizeof(zclYnxtWaterMeter_CurrentSummationDelivered_EP_First));
+}
+extern void zclYnxtWaterMeter_ResetAttributesToDefaultValues_EP_Second(void) 
+{
+  zclYnxtWaterMeter_CurrentSummationDelivered_EP_Second.lsb = 0;
+  osal_nv_delete(NV_ENABLED_SECOND_ID, sizeof(zclYnxtWaterMeter_DeviceEnable_EP_Second));
+  osal_nv_delete(NV_CSD_SECOND_ID, sizeof(zclYnxtWaterMeter_CurrentSummationDelivered_EP_Second));
+}
+extern void zclYnxtWaterMeter_ResetAttributesToDefaultValues_EP_Third(void)
+{
+  zclYnxtWaterMeter_CurrentSummationDelivered_EP_Third.lsb = 0;
+  osal_nv_delete(NV_ENABLED_THIRD_ID, sizeof(zclYnxtWaterMeter_DeviceEnable_EP_Third));
+  osal_nv_delete(NV_CSD_THIRD_ID, sizeof(zclYnxtWaterMeter_CurrentSummationDelivered_EP_Third));
+}
+
 void zclYnxtWaterMeter_ResetAttributesToDefaultValues(void)
 {
 #ifdef ZCL_IDENTIFY
   zclYnxtWaterMeter_IdentifyTime = 0;
 #endif
-  
-  zclYnxtWaterMeter_CurrentSummationDelivered_EP_First.lsb = 0;
-  zclYnxtWaterMeter_CurrentSummationDelivered_EP_Second.lsb = 0;
-  zclYnxtWaterMeter_CurrentSummationDelivered_EP_Third.lsb = 0;
-  
-  osal_nv_delete(NV_ENABLED_FIRST_ID, sizeof(zclYnxtWaterMeter_DeviceEnable_EP_First));
-  osal_nv_delete(NV_ENABLED_SECOND_ID, sizeof(zclYnxtWaterMeter_DeviceEnable_EP_Second));
-  osal_nv_delete(NV_ENABLED_THIRD_ID, sizeof(zclYnxtWaterMeter_DeviceEnable_EP_Third));
-  
-  osal_nv_delete(NV_CSD_FIRST_ID, sizeof(zclYnxtWaterMeter_CurrentSummationDelivered_EP_First));
-  osal_nv_delete(NV_CSD_SECOND_ID, sizeof(zclYnxtWaterMeter_CurrentSummationDelivered_EP_Second));
-  osal_nv_delete(NV_CSD_THIRD_ID, sizeof(zclYnxtWaterMeter_CurrentSummationDelivered_EP_Third));
 }
 
 /****************************************************************************
